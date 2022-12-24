@@ -20,14 +20,39 @@ async function summarize() {
    //gpt3 call
    let wrd = words ? (words != "DONT CHANGE THIS VALUE UNLESS YOU WANT A SPECIFIC AMOUNT OF WORDS PER POINT") : 10;
    var pars = input.split("\n\n").map(word => word.trim())
+   if (pars.length > 4) {
+    let sum = ``;
+        for (let i = 0; i < pars.length; i++) {
+            let gptInp = `
+         Summarize the following text by writing one short concise Bullet Point:
+         Write MAXIMUM ${wrd} words per bullet point. 
+         WRITE LITTLE WORDS BE CONCISE
+
+            Text: ${pars[i]}
+            Bullet Point:
+         `;
+            const response = await openai.createCompletion({
+                model: "text-curie-001",
+                prompt: gptInp,
+                temperature: 0.7,
+                max_tokens: 80,
+                top_p: 1,
+                frequency_penalty: 0,
+                presence_penalty: 0,
+                stop: ["\n"]
+                });
+                console.log(response.data.choices[0].text);
+            sum += await response.data.choices[0].text + "\n";
+        }
+        console.log(sum);
+        summary = sum.split("\n").filter(point => point != "").map(word => word.trim().replaceAll("-", "").trim()).filter(x => x.trim().length != 0);
+        return;
+    }
+
    var gptInp = `
-   Summarize the following text by writing one bullet point per paragraph.
+   Summarize the following text by writing one bullet point per paragraph .
    ONLY ${pars.length} bullet points are allowed. (No more)
-   ONLY ${pars.length} bullet points are allowed. (No more)
-   USE SIMPLE WORDS AND SHORT SENTENCES.
     USE SIMPLE WORDS AND SHORT SENTENCES.
-
-
 
    Text: ${input}
    
@@ -38,20 +63,20 @@ async function summarize() {
     model: "text-davinci-002",
     prompt: gptInp,
     temperature: 0.7,
-    max_tokens: 300,
+    max_tokens: 100,
     top_p: 1,
     frequency_penalty: 0,
     presence_penalty: 0,
     });
+    console.log(response)
     console.log(await response.data.choices[0].text);
     summary = await response.data.choices[0].text.split("\n").filter(point => point != "").map(word => word.trim().replaceAll("-", "").trim());
 }
 async function downloadpdf() {
     let x = 20;
-    let y = 30;
+    let y = 20;
     var doc = new jsPDF();
-    doc.setFontSize(22);
-    doc.text(20, 20, "Summary");
+    doc.setFontSize(15);
     doc.setFont("Myfont-Regular 2","txt2")
     let fonts = ["num1"];
     let numfonts = ["num1"]
@@ -74,9 +99,14 @@ async function downloadpdf() {
                 y += 5;
                 x = 20;
             }
-            x += 4.2;
+            if ( y > 280) {
+                doc.addPage();
+                y = 20;
+                x = 20;
+            }
+            x += 2.4;
             if (summary[i][j] == " ") {
-            x += .8;
+            x += .4;
             }
             else {
             doc.text(x, y, summary[i][j]);
@@ -97,7 +127,7 @@ async function downloadpdf() {
                 <label class="label">Enter your notes:</label>
                 <div class="control">
                     
-                    <textarea class="textarea" bind:value={input}></textarea>
+                    <textarea style="height:250px" class="textarea" bind:value={input}></textarea>
                 </div>
             </div>
             <div class="field">
