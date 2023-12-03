@@ -7,7 +7,7 @@
     import "./txt2-normal"
     import "./txt3-normal"
     const configuration = new Configuration({
-   apiKey: "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",
+   apiKey: "",
    });
    const openai = new OpenAIApi(configuration);
    Array.prototype.random = function () {
